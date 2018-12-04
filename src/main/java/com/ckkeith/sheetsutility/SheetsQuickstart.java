@@ -98,7 +98,7 @@ public class SheetsQuickstart {
     
 	public static String create(String sheetName) throws Exception {
 		Spreadsheet spreadSheet = new Spreadsheet().setProperties(new SpreadsheetProperties().setTitle(sheetName));
-		Spreadsheet result = sheetsService.spreadsheets().create(spreadSheet).execute();
+		Spreadsheet result = getSheetsService().spreadsheets().create(spreadSheet).execute();
 		return result.getSpreadsheetId();
 	}
 
@@ -125,11 +125,6 @@ public class SheetsQuickstart {
 		System.out.println("batchUpdate: " + batchUpdate.toString());
 	}
 
-	private static void testRead() throws Exception {
-        List<List<Object>> values = getRange("1vo9OiDWyDvUGhjaXLUrnr9FkzO2NdUgN-AVe_CONU6U", "Sheet1!A1:C15");
-        printData(values);
-	}
-
 	private static String testCreate() throws Exception {
 		String t = LocalDateTime.now().toString();
 		String name = "test sheet " + t;
@@ -138,15 +133,25 @@ public class SheetsQuickstart {
 		return spreadSheetId;
 	}
 
+	private static Integer testAppend(String spreadSheetId) throws Exception {
+		Integer i;
+		for (i = 1; i <= 10; i++) {
+			List<List<Object>> values = Arrays.asList(Arrays.asList((Object) ("value A " + i), (Object) ("value B " + i)));
+			String targetCell = "A" + i;
+			appendData(spreadSheetId, targetCell, values);
+			System.out.println("Appended row at " + targetCell + ", sleeping for 10 seconds");
+			Thread.sleep(10 * 1000);
+		}
+		return i;
+	}
+
 	public static void main(String... args) throws Exception {
-		testRead();
 		String spreadSheetId = testCreate();
-		List<List<Object>> values = Arrays.asList(Arrays.asList((Object) "value1", (Object) "value2"));
-		appendData(spreadSheetId, "A1", values);
-        values = getRange(spreadSheetId, "Sheet1!A1:B1");
+		Integer i = testAppend(spreadSheetId);
+		List<List<Object>> values = getRange(spreadSheetId, "Sheet1!A1:B" + i);
 		printData(values);
 		deleteRow(spreadSheetId, 0, 1);
-        values = getRange(spreadSheetId, "Sheet1!A1:B1");
+		values = getRange(spreadSheetId, "Sheet1!A1:B1");
 		printData(values);
 	}
 }
