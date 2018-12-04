@@ -110,16 +110,19 @@ public class SheetsQuickstart {
 				.execute();
 	}
 
-	public static void deleteRow(String spreadSheetId, String range) throws Exception {
+	public static void deleteRow(String spreadSheetId, int startRowIndex, int endRowIndex) throws Exception {
 		BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
 		Request request = new Request();
 		request.setDeleteDimension(new DeleteDimensionRequest().setRange(new DimensionRange()
-				.setDimension(range)));
+				.setSheetId(0)
+				.setDimension("ROWS")
+				.setStartIndex(startRowIndex)
+				.setEndIndex(endRowIndex)));
 		List<Request> requests = new ArrayList<Request>();
 		requests.add(request);
 		content.setRequests(requests);
 		BatchUpdate batchUpdate = getSheetsService().spreadsheets().batchUpdate(spreadSheetId, content);
-		System.out.println(batchUpdate.toString());
+		System.out.println("batchUpdate: " + batchUpdate.toString());
 	}
 
 	private static void testRead() throws Exception {
@@ -129,8 +132,9 @@ public class SheetsQuickstart {
 
 	private static String testCreate() throws Exception {
 		String t = LocalDateTime.now().toString();
-		String spreadSheetId = create("test sheet " + t);
-		System.out.println("spreadSheetId: " + spreadSheetId);
+		String name = "test sheet " + t;
+		String spreadSheetId = create(name);
+		System.out.println("created sheet named: " + name + " with spreadSheetId: " + spreadSheetId);
 		return spreadSheetId;
 	}
 
@@ -141,7 +145,7 @@ public class SheetsQuickstart {
 		appendData(spreadSheetId, "A1", values);
         values = getRange(spreadSheetId, "Sheet1!A1:B1");
 		printData(values);
-		deleteRow(spreadSheetId, "A1");
+		deleteRow(spreadSheetId, 0, 1);
         values = getRange(spreadSheetId, "Sheet1!A1:B1");
 		printData(values);
 	}
