@@ -11,6 +11,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.Sheets.Spreadsheets.BatchUpdate;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.DeleteDimensionRequest;
@@ -23,8 +24,9 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class SheetsQuickstart {
@@ -36,7 +38,7 @@ public class SheetsQuickstart {
      * Global instance of the scopes required by this quickstart.
      * If modifying these scopes, delete your previously saved tokens/ folder.
      */
-    private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
+	private static final List<String> SCOPES = Arrays.asList(SheetsScopes.DRIVE, SheetsScopes.SPREADSHEETS);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
     private static Sheets sheetsService;
@@ -94,7 +96,7 @@ public class SheetsQuickstart {
         }
     }
     
-	public String create(String sheetName) throws Exception {
+	public static String create(String sheetName) throws Exception {
 		Spreadsheet spreadSheet = new Spreadsheet().setProperties(new SpreadsheetProperties().setTitle(sheetName));
 		Spreadsheet result = sheetsService.spreadsheets().create(spreadSheet).execute();
 		return result.getSpreadsheetId();
@@ -116,11 +118,31 @@ public class SheetsQuickstart {
 		List<Request> requests = new ArrayList<Request>();
 		requests.add(request);
 		content.setRequests(requests);
-		getSheetsService().spreadsheets().batchUpdate(spreadSheetId, content);
+		BatchUpdate batchUpdate = getSheetsService().spreadsheets().batchUpdate(spreadSheetId, content);
+		System.out.println(batchUpdate.toString());
 	}
 
-    public static void main(String... args) throws Exception {
+	private static void testRead() throws Exception {
         List<List<Object>> values = getRange("1vo9OiDWyDvUGhjaXLUrnr9FkzO2NdUgN-AVe_CONU6U", "Sheet1!A1:C15");
         printData(values);
-    }
+	}
+
+	private static String testCreate() throws Exception {
+		String t = LocalDateTime.now().toString();
+		String spreadSheetId = create("test sheet " + t);
+		System.out.println("spreadSheetId: " + spreadSheetId);
+		return spreadSheetId;
+	}
+
+	public static void main(String... args) throws Exception {
+		testRead();
+		String spreadSheetId = testCreate();
+		List<List<Object>> values = Arrays.asList(Arrays.asList((Object) "value1", (Object) "value2"));
+		appendData(spreadSheetId, "A1", values);
+        values = getRange(spreadSheetId, "Sheet1!A1:B1");
+		printData(values);
+		deleteRow(spreadSheetId, "A1");
+        values = getRange(spreadSheetId, "Sheet1!A1:B1");
+		printData(values);
+	}
 }
