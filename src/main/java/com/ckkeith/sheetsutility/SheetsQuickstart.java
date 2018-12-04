@@ -12,12 +12,18 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
+import com.google.api.services.sheets.v4.model.DeleteDimensionRequest;
+import com.google.api.services.sheets.v4.model.DimensionRange;
+import com.google.api.services.sheets.v4.model.Request;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -67,18 +73,18 @@ public class SheetsQuickstart {
     	return sheetsService;
     }
     
-    private static List<List<Object>> getRange(String spreadsheetId, String range) throws Exception {
+    public static List<List<Object>> getRange(String spreadsheetId, String range) throws Exception {
         ValueRange response = getSheetsService().spreadsheets().values()
                 .get(spreadsheetId, range)
                 .execute();
         return response.getValues();
     }
     
-    private static void printData(List<List<Object>> values) {
+    public static void printData(List<List<Object>> values) {
         if (values == null || values.isEmpty()) {
             System.out.println("No data found.");
         } else {
-            for (List row : values) {
+            for (List<Object> row : values) {
             	StringBuilder sb = new StringBuilder();
             	for (Object o : row) {
             		sb.append(o.toString()).append("\t");
@@ -88,6 +94,31 @@ public class SheetsQuickstart {
         }
     }
     
+	public String create(String sheetName) throws Exception {
+		Spreadsheet spreadSheet = new Spreadsheet().setProperties(new SpreadsheetProperties().setTitle(sheetName));
+		Spreadsheet result = sheetsService.spreadsheets().create(spreadSheet).execute();
+		return result.getSpreadsheetId();
+	}
+
+	public static void appendData(String spreadSheetId, String targetCell, List<List<Object>> values)
+			throws Exception {
+		ValueRange appendBody = new ValueRange().setValues(values);
+		getSheetsService().spreadsheets().values().append(spreadSheetId, targetCell, appendBody)
+				.setValueInputOption("USER_ENTERED").setInsertDataOption("INSERT_ROWS").setIncludeValuesInResponse(true)
+				.execute();
+	}
+
+	public static void deleteRow(String spreadSheetId, String range) throws Exception {
+		BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
+		Request request = new Request();
+		request.setDeleteDimension(new DeleteDimensionRequest().setRange(new DimensionRange()
+				.setDimension(range)));
+		List<Request> requests = new ArrayList<Request>();
+		requests.add(request);
+		content.setRequests(requests);
+		getSheetsService().spreadsheets().batchUpdate(spreadSheetId, content);
+	}
+
     public static void main(String... args) throws Exception {
         List<List<Object>> values = getRange("1vo9OiDWyDvUGhjaXLUrnr9FkzO2NdUgN-AVe_CONU6U", "Sheet1!A1:C15");
         printData(values);

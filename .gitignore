@@ -28,5 +28,11 @@ build/
 gradlew
 gradlew.bat
 
+# security
 tokens/
 src/main/resources/credentials.json
+
+# Eclipse
+.classpath
+.settings/
+bin/
