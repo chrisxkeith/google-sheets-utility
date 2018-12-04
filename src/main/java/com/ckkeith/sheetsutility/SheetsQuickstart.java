@@ -130,6 +130,8 @@ public class SheetsQuickstart {
 		String name = "test sheet " + t;
 		String spreadSheetId = create(name);
 		System.out.println("created sheet named: " + name + " with spreadSheetId: " + spreadSheetId);
+		System.out.println("Sleeping for 10 seconds.");
+		Thread.sleep(10 * 1000);
 		return spreadSheetId;
 	}
 
@@ -139,19 +141,25 @@ public class SheetsQuickstart {
 			List<List<Object>> values = Arrays.asList(Arrays.asList((Object) ("value A " + i), (Object) ("value B " + i)));
 			String targetCell = "A" + i;
 			appendData(spreadSheetId, targetCell, values);
-			System.out.println("Appended row at " + targetCell + ", sleeping for 10 seconds");
-			Thread.sleep(10 * 1000);
+			System.out.println("Appended row at " + targetCell);
 		}
+		List<List<Object>> values = getRange(spreadSheetId, "Sheet1!A1:B" + i);
+		printData(values);
 		return i;
+	}
+
+	private static void testDelete(String spreadSheetId, Integer rowToStart) throws Exception {
+		for (Integer i = rowToStart; i > 1; i--) {
+			deleteRow(spreadSheetId, i - 1, 1);
+			List<List<Object>>  values = getRange(spreadSheetId, "Sheet1!A1:B10");
+			System.out.println("Deleted (I hope) row at " + i);
+			printData(values);
+		}
 	}
 
 	public static void main(String... args) throws Exception {
 		String spreadSheetId = testCreate();
 		Integer i = testAppend(spreadSheetId);
-		List<List<Object>> values = getRange(spreadSheetId, "Sheet1!A1:B" + i);
-		printData(values);
-		deleteRow(spreadSheetId, 0, 1);
-		values = getRange(spreadSheetId, "Sheet1!A1:B1");
-		printData(values);
+		testDelete(spreadSheetId, i);
 	}
 }
