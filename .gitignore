@@ -27,6 +27,7 @@ build/
 .project
 gradlew
 gradlew.bat
+.gradle/5.0/
 
 # security
 tokens/
